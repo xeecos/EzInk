@@ -19,7 +19,7 @@ const char *password = "hulurobot";
  * 1 byte = 8 pixels, therefore you have to set 8*N pixels at a time.
  */
 const char *host = "192.168.31.167";
-unsigned char image[128 * 128];
+unsigned char image[200 * 200];
 Paint paint(image, 0, 0); // width should be the multiple of 8
 Epd epd;
 unsigned long time_start_ms;
@@ -29,7 +29,7 @@ HWCDC USBSerial;
 void setup()
 {
     // put your setup code here, to run once:
-    USBSerial.begin(115200);
+    //USBSerial.begin(115200);
     delay(1000);
     // while(1);
     WiFi.begin(ssid, password);
@@ -37,21 +37,21 @@ void setup()
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
-        USBSerial.print(".");
+        //USBSerial.print(".");
     }
 
-    USBSerial.println("");
-    USBSerial.println("WiFi connected");
-    USBSerial.println("IP address: ");
-    USBSerial.println(WiFi.localIP());
+    //USBSerial.println("");
+    //USBSerial.println("WiFi connected");
+    //USBSerial.println("IP address: ");
+    //USBSerial.println(WiFi.localIP());
     if (epd.Init(lut_partial_update) != 0)
     {
-        USBSerial.println("e-Paper init failed");
+        //USBSerial.println("e-Paper init failed");
         return;
     }
     else
     {
-        USBSerial.println("e-Paper init success");
+        //USBSerial.println("e-Paper init success");
     }
     /**
      *  there are 2 memory areas embedded in the e-paper display
@@ -123,17 +123,18 @@ void loop()
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_DB_11);
     int val = adc1_get_raw(ADC1_CHANNEL_4);
-    USBSerial.printf("%d\n", val);
+    // //USBSerial.printf("%d\n", val);
     if (val > 3000)
     {
-        delay(100);
+        delay(20);
     }
     else if (val > 1000)
     {
     }
     else if (val > 500)
     {
-        connectServer(128);
+        connectServer(200);
+        delay(500);
     }
     else
     {
@@ -167,28 +168,28 @@ void connectServer(int size)
     if (http_code != HTTP_CODE_OK)
     {
         // get fail.
-        Serial.printf("GET fail, http code is %s\n", http.errorToString(http_code).c_str());
+        // USBSerial.printf("GET fail, http code is %s\n", http.errorToString(http_code).c_str());
         return;
     }
 
     // http response
     String response = http.getString();
-    USBSerial.printf("response:[%s]\n", response.c_str());
+    //USBSerial.printf("response:[%s]\n", response.c_str());
 
     const uint8_t *bytes = (const uint8_t *)response.c_str();
     // Read all the lines of the reply from server and print them to Serial
-    size = bytes[0];
-    USBSerial.printf("size:%d %d\n", bytes[0], bytes[1]);
-    USBSerial.println();
-    USBSerial.println("closing connection");
+    size = bytes[2];
+    //USBSerial.printf("size:%d %d\n", bytes[2], bytes[3]);
+    //USBSerial.println();
+    //USBSerial.println("closing connection");
 
-    paint.SetWidth(size);
-    paint.SetHeight(size);
+    paint.SetWidth(bytes[2]);
+    paint.SetHeight(bytes[3]);
     paint.SetRotate(ROTATE_0);
     paint.Clear(UNCOLORED);
-    for (int i = 2, len = size * size / 8 + 2; i < len; i++)
+    for (int i = 4, len = size * size / 8 + 4; i < len; i++)
     {
-        int idx = (i - 2) * 8;
+        int idx = (i - 4) * 8;
         int x = idx % size;
         int y = (int)(idx / size);
         int c = bytes[i];
@@ -198,7 +199,7 @@ void connectServer(int size)
             paint.DrawPixel(x, y, !b);
         }
     }
-    epd.SetFrameMemory(paint.GetImage(), (200 - size) / 2, (200 - size) / 4, paint.GetWidth(), paint.GetHeight());
+    epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
     epd.DisplayFrame();
     epd.DisplayFrame();
 }
