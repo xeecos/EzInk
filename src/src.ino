@@ -1,41 +1,16 @@
-/**
- *  @filename   :   epd1in54-demo.ino
- *  @brief      :   1.54inch e-paper display demo
- *  @author     :   Yehui from Waveshare
- *
- *  Copyright (C) Waveshare     September 5 2017
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documnetation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to  whom the Software is
- * furished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS OR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 
 #include <SPI.h>
 #include "epd1in54.h"
 #include "epdpaint.h"
 #include "imagedata.h"
-
+#include <driver/adc.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
+const char *ssid = "makeblock.cc";
+const char *password = "hulurobot";
 #define COLORED 0
 #define UNCOLORED 1
 
-//  adc1_config_width(ADC_WIDTH_BIT_12);
-//  adc1_config_channel_atten(ADC1_CHANNEL_4,ADC_ATTEN_DB_11);
-//  int val = adc1_get_raw(ADC1_CHANNEL_4);
-//  USBSerial.printf("%d\n",val);
 //  delay(500);
 /**
  * Due to RAM not enough in Arduino UNO, a frame buffer is not allowed.
@@ -43,7 +18,8 @@
  * update a partial display several times.
  * 1 byte = 8 pixels, therefore you have to set 8*N pixels at a time.
  */
-unsigned char image[1024];
+const char *host = "192.168.31.167";
+unsigned char image[128 * 128];
 Paint paint(image, 0, 0); // width should be the multiple of 8
 Epd epd;
 unsigned long time_start_ms;
@@ -54,16 +30,29 @@ void setup()
 {
     // put your setup code here, to run once:
     USBSerial.begin(115200);
+    delay(1000);
+    // while(1);
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        USBSerial.print(".");
+    }
+
+    USBSerial.println("");
+    USBSerial.println("WiFi connected");
+    USBSerial.println("IP address: ");
+    USBSerial.println(WiFi.localIP());
     if (epd.Init(lut_partial_update) != 0)
     {
-        USBSerial.print("e-Paper init failed");
+        USBSerial.println("e-Paper init failed");
         return;
     }
     else
     {
-        USBSerial.print("e-Paper init success");
+        USBSerial.println("e-Paper init success");
     }
-
     /**
      *  there are 2 memory areas embedded in the e-paper display
      *  and once the display is refreshed, the memory area will be auto-toggled,
@@ -131,24 +120,85 @@ void setup()
 
 void loop()
 {
+    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_DB_11);
+    int val = adc1_get_raw(ADC1_CHANNEL_4);
+    USBSerial.printf("%d\n", val);
+    if (val > 3000)
+    {
+        delay(100);
+    }
+    else if (val > 1000)
+    {
+    }
+    else if (val > 500)
+    {
+        connectServer(128);
+    }
+    else
+    {
+    }
     // put your main code here, to run repeatedly:
-    time_now_s = (millis() - time_start_ms) / 1000;
-    char time_string[] = {'0', '0', ':', '0', '0', '\0'};
-    time_string[0] = time_now_s / 60 / 10 + '0';
-    time_string[1] = time_now_s / 60 % 10 + '0';
-    time_string[3] = time_now_s % 60 / 10 + '0';
-    time_string[4] = time_now_s % 60 % 10 + '0';
+    // time_now_s = (millis() - time_start_ms) / 1000;
+    // char time_string[] = {'0', '0', ':', '0', '0', '\0'};
+    // time_string[0] = time_now_s / 60 / 10 + '0';
+    // time_string[1] = time_now_s / 60 % 10 + '0';
+    // time_string[3] = time_now_s % 60 / 10 + '0';
+    // time_string[4] = time_now_s % 60 % 10 + '0';
+}
 
-    paint.SetWidth(96);
-    paint.SetHeight(32);
+void connectServer(int size)
+{
+
+    // We now create a URI for the request
+    String url = "http://192.168.31.167:3000/";
+    url += "?size=";
+    url += size;
+    url += "&font=";
+    url += "SimSun";
+
+    HTTPClient http;
+    http.begin(url);
+
+    // start get
+    int http_code = http.GET();
+
+    // handle http code
+    if (http_code != HTTP_CODE_OK)
+    {
+        // get fail.
+        Serial.printf("GET fail, http code is %s\n", http.errorToString(http_code).c_str());
+        return;
+    }
+
+    // http response
+    String response = http.getString();
+    USBSerial.printf("response:[%s]\n", response.c_str());
+
+    const uint8_t *bytes = (const uint8_t *)response.c_str();
+    // Read all the lines of the reply from server and print them to Serial
+    size = bytes[0];
+    USBSerial.printf("size:%d %d\n", bytes[0], bytes[1]);
+    USBSerial.println();
+    USBSerial.println("closing connection");
+
+    paint.SetWidth(size);
+    paint.SetHeight(size);
     paint.SetRotate(ROTATE_0);
-    paint.get_utf8_data(0, 0, 0, 0, 0, 0);
     paint.Clear(UNCOLORED);
-    //  paint.DrawStringAt(0, 4, time_string, &Font24, COLORED);
-    //  paint.DrawHanzi(0, 4, "我", COLORED);
-    //  paint.DrawHanzi(16, 4, "们", COLORED);
-    paint.DrawHanzi(0, 4, "我", COLORED);
-    paint.DrawHanzi(20, 4, "国", COLORED);
-    epd.SetFrameMemory(paint.GetImage(), 80, 72, paint.GetWidth(), paint.GetHeight());
+    for (int i = 2, len = size * size / 8 + 2; i < len; i++)
+    {
+        int idx = (i - 2) * 8;
+        int x = idx % size;
+        int y = (int)(idx / size);
+        int c = bytes[i];
+        for (int j = 0; j < 8; j++, x++)
+        {
+            bool b = (c >> (j)) & 0x1;
+            paint.DrawPixel(x, y, !b);
+        }
+    }
+    epd.SetFrameMemory(paint.GetImage(), (200 - size) / 2, (200 - size) / 4, paint.GetWidth(), paint.GetHeight());
+    epd.DisplayFrame();
     epd.DisplayFrame();
 }

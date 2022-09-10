@@ -26,8 +26,8 @@ function drawText(c, size = 64, font = "SimSun") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, 200, 200);
     ctx.fillStyle = "#000000";
-    ctx.font = `${size}px ${font}}`
-    ctx.fillText(c, 10, size);
+    ctx.font = `${size-8}px ${font}}`
+    ctx.fillText(c, 8, size-16);
     // console.log(canvas.toDataURL())
     let pixels = ctx.getImageData(0, 0, size, size);
     let bin = [];
