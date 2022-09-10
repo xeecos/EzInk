@@ -54,15 +54,14 @@ void setup()
 {
     // put your setup code here, to run once:
     USBSerial.begin(115200);
-    USBSerial.print("e-Paper init ");
-
-    if (epd.Init(lut_partial_update) != 0) {
+    if (epd.Init(lut_partial_update) != 0)
+    {
         USBSerial.print("e-Paper init failed");
         return;
     }
     else
     {
-    USBSerial.print("e-Paper init success");
+        USBSerial.print("e-Paper init success");
     }
 
     /**
@@ -75,7 +74,6 @@ void setup()
     epd.DisplayFrame();
     epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
     epd.DisplayFrame();
-
 
     // paint.SetRotate(ROTATE_90);
     // paint.SetWidth(200);
@@ -131,28 +129,26 @@ void setup()
     // epd.Sleep();
 }
 
-
 void loop()
 {
     // put your main code here, to run repeatedly:
-     time_now_s = (millis() - time_start_ms) / 1000;
-     char time_string[] = {'0', '0', ':', '0', '0', '\0'};
-     time_string[0] = time_now_s / 60 / 10 + '0';
-     time_string[1] = time_now_s / 60 % 10 + '0';
-     time_string[3] = time_now_s % 60 / 10 + '0';
-     time_string[4] = time_now_s % 60 % 10 + '0';
+    time_now_s = (millis() - time_start_ms) / 1000;
+    char time_string[] = {'0', '0', ':', '0', '0', '\0'};
+    time_string[0] = time_now_s / 60 / 10 + '0';
+    time_string[1] = time_now_s / 60 % 10 + '0';
+    time_string[3] = time_now_s % 60 / 10 + '0';
+    time_string[4] = time_now_s % 60 % 10 + '0';
 
-     paint.SetWidth(96);
-     paint.SetHeight(32);
-     paint.SetRotate(ROTATE_0);
-
-     paint.Clear(UNCOLORED);
+    paint.SetWidth(96);
+    paint.SetHeight(32);
+    paint.SetRotate(ROTATE_0);
+    paint.get_utf8_data(0, 0, 0, 0, 0, 0);
+    paint.Clear(UNCOLORED);
     //  paint.DrawStringAt(0, 4, time_string, &Font24, COLORED);
     //  paint.DrawHanzi(0, 4, "我", COLORED);
     //  paint.DrawHanzi(16, 4, "们", COLORED);
-     paint.DrawHanzi(0, 4, "我", COLORED);
-     paint.DrawHanzi(20, 4, "国", COLORED);
-     epd.SetFrameMemory(paint.GetImage(), 80, 72, paint.GetWidth(), paint.GetHeight());
-     epd.DisplayFrame();
-
+    paint.DrawHanzi(0, 4, "我", COLORED);
+    paint.DrawHanzi(20, 4, "国", COLORED);
+    epd.SetFrameMemory(paint.GetImage(), 80, 72, paint.GetWidth(), paint.GetHeight());
+    epd.DisplayFrame();
 }
