@@ -6,18 +6,15 @@
 #include <driver/adc.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include "AHTxx.h"
+#include "spl06.h"
+AHTxx aht20(AHTXX_ADDRESS_X38, AHT2x_SENSOR);
 const char *ssid = "makeblock.cc";
 const char *password = "hulurobot";
 #define COLORED 0
 #define UNCOLORED 1
 
 //  delay(500);
-/**
- * Due to RAM not enough in Arduino UNO, a frame buffer is not allowed.
- * In this case, a smaller image buffer is allocated and you have to
- * update a partial display several times.
- * 1 byte = 8 pixels, therefore you have to set 8*N pixels at a time.
- */
 const char *host = "192.168.31.167";
 unsigned char image[200 * 200];
 Paint paint(image, 0, 0); // width should be the multiple of 8
@@ -28,94 +25,67 @@ unsigned long time_now_s;
 HWCDC USBSerial;
 void setup()
 {
+    Wire.begin(10, 8);
     // put your setup code here, to run once:
-    //USBSerial.begin(115200);
+    USBSerial.begin(115200);
     delay(1000);
-    // while(1);
+    SPL_init();
+    aht20.begin();
+    while (1)
+    {
+        USBSerial.print("Measured Air Pressure: ");
+        USBSerial.print(get_pressure(), 2);
+        USBSerial.println(" mb");
+
+        // ---- Altitude Values ----------------
+        double local_pressure = 1011.3; // Look up local sea level pressure on google // Local pressure from airport website 8/22
+        USBSerial.print("Local Airport Sea Level Pressure: ");
+        USBSerial.print(local_pressure, 2);
+        USBSerial.println(" mb");
+
+        USBSerial.print("altitude: ");
+        USBSerial.print(get_altitude(get_pressure(), local_pressure), 1);
+        USBSerial.println(" m");
+
+        USBSerial.print("altitude: ");
+        USBSerial.print(get_altitude_f(get_pressure(), local_pressure), 1); // convert from meters to feet
+        USBSerial.println(" ft");
+
+        USBSerial.println("\n");
+        USBSerial.print("temp: ");
+        USBSerial.print((get_temp_c() + aht20.readTemperature()) / 2);
+        USBSerial.print(" C, ");
+        USBSerial.print("humidity: ");
+        USBSerial.print(aht20.readHumidity());
+        USBSerial.println(" %");
+        delay(2000);
+    }
     WiFi.begin(ssid, password);
 
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
-        //USBSerial.print(".");
     }
 
-    //USBSerial.println("");
-    //USBSerial.println("WiFi connected");
-    //USBSerial.println("IP address: ");
-    //USBSerial.println(WiFi.localIP());
+    // USBSerial.println("");
+    // USBSerial.println("WiFi connected");
+    // USBSerial.println("IP address: ");
+    // USBSerial.println(WiFi.localIP());
     if (epd.Init(lut_partial_update) != 0)
     {
-        //USBSerial.println("e-Paper init failed");
+        // USBSerial.println("e-Paper init failed");
         return;
     }
     else
     {
-        //USBSerial.println("e-Paper init success");
+        // USBSerial.println("e-Paper init success");
     }
-    /**
-     *  there are 2 memory areas embedded in the e-paper display
-     *  and once the display is refreshed, the memory area will be auto-toggled,
-     *  i.e. the next action of SetFrameMemory will set the other memory area
-     *  therefore you have to clear the frame memory twice.
-     */
     epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
     epd.DisplayFrame();
     epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
     epd.DisplayFrame();
 
-    // paint.SetRotate(ROTATE_90);
-    // paint.SetWidth(200);
-    // paint.SetHeight(24);
-
-    // /* For simplicity, the arguments are explicit numerical coordinates */
-    // paint.Clear(COLORED);
-    // paint.DrawStringAt(30, 4, "Hello world!", &Font16, UNCOLORED);
-    // epd.SetFrameMemory(paint.GetImage(), 0, 10, paint.GetWidth(), paint.GetHeight());
-
-    // paint.Clear(UNCOLORED);
-    // paint.DrawStringAt(30, 4, "e-Paper Demo", &Font16, COLORED);
-    // epd.SetFrameMemory(paint.GetImage(), 0, 30, paint.GetWidth(), paint.GetHeight());
-
-    // paint.SetWidth(64);
-    // paint.SetHeight(64);
-
-    // paint.Clear(UNCOLORED);
-    // paint.DrawRectangle(0, 0, 40, 50, COLORED);
-    // paint.DrawLine(0, 0, 40, 50, COLORED);
-    // paint.DrawLine(40, 0, 0, 50, COLORED);
-    // epd.SetFrameMemory(paint.GetImage(), 16, 60, paint.GetWidth(), paint.GetHeight());
-
-    // paint.Clear(UNCOLORED);
-    // paint.DrawCircle(32, 32, 30, COLORED);
-    // epd.SetFrameMemory(paint.GetImage(), 120, 60, paint.GetWidth(), paint.GetHeight());
-
-    // paint.Clear(UNCOLORED);
-    // paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
-    // epd.SetFrameMemory(paint.GetImage(), 16, 130, paint.GetWidth(), paint.GetHeight());
-
-    // paint.Clear(UNCOLORED);
-    // paint.DrawFilledCircle(32, 32, 30, COLORED);
-    // epd.SetFrameMemory(paint.GetImage(), 120, 130, paint.GetWidth(), paint.GetHeight());
-    // epd.DisplayFrame();
-
-    // /**
-    //  *  there are 2 memory areas embedded in the e-paper display
-    //  *  and once the display is refreshed, the memory area will be auto-toggled,
-    //  *  i.e. the next action of SetFrameMemory will set the other memory area
-    //  *  therefore you have to set the frame memory and refresh the display twice.
-    //  */
-    // epd.SetFrameMemory(IMAGE_DATA);
-    // epd.DisplayFrame();
-    // epd.SetFrameMemory(IMAGE_DATA);
-    // epd.DisplayFrame();
-
-    // epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
-    // epd.DisplayFrame();
-    // epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
-    // epd.DisplayFrame();
     time_start_ms = millis();
-    // epd.Sleep();
 }
 
 void loop()
@@ -174,14 +144,14 @@ void connectServer(int size)
 
     // http response
     String response = http.getString();
-    //USBSerial.printf("response:[%s]\n", response.c_str());
+    // USBSerial.printf("response:[%s]\n", response.c_str());
 
     const uint8_t *bytes = (const uint8_t *)response.c_str();
     // Read all the lines of the reply from server and print them to Serial
     size = bytes[2];
-    //USBSerial.printf("size:%d %d\n", bytes[2], bytes[3]);
-    //USBSerial.println();
-    //USBSerial.println("closing connection");
+    // USBSerial.printf("size:%d %d\n", bytes[2], bytes[3]);
+    // USBSerial.println();
+    // USBSerial.println("closing connection");
 
     paint.SetWidth(bytes[2]);
     paint.SetHeight(bytes[3]);
