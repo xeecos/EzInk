@@ -77,25 +77,6 @@ Epd epd;
 
 // void loop()
 // {
-//     adc1_config_width(ADC_WIDTH_BIT_12);
-//     adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_DB_11);
-//     int val = adc1_get_raw(ADC1_CHANNEL_4);
-//     // //USBSerial.printf("%d\n", val);
-//     if (val > 3000)
-//     {
-//         delay(20);
-//     }
-//     else if (val > 1000)
-//     {
-//     }
-//     else if (val > 500)
-//     {
-//         connectServer(200);
-//         delay(500);
-//     }
-//     else
-//     {
-//     }
 //     // put your main code here, to run repeatedly:
 //     // time_now_s = (millis() - time_start_ms) / 1000;
 //     // char time_string[] = {'0', '0', ':', '0', '0', '\0'};

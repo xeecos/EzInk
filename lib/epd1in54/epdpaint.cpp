@@ -25,7 +25,6 @@
  */
 
 #include "epdpaint.h"
-#include "ch.h"
 
 Paint::Paint(unsigned char *image, int width, int height)
 {
@@ -203,36 +202,6 @@ void Paint::DrawCharAt(int x, int y, char ascii_char, sFONT *font, int colored)
     }
 }
 
-void Paint::DrawHanzi(int x, int y, const char c[3], int colored)
-{
-    int i, j;
-    for (int k = 0; k < 5; k++)
-    {
-        if (hanzi16[k].Index[0] == c[0] && hanzi16[k].Index[1] == c[1] && hanzi16[k].Index[2] == c[2])
-        {
-            const unsigned char *ptr = hanzi16[k].hz16_Id;
-            for (j = 0; j < 16; j++)
-            {
-                int w = hanzi16[k].hz_width;
-                for (i = 0; i < w; i++)
-                {
-                    if ((*ptr) & (0x80 >> (i % 8)))
-                    {
-                        DrawPixel(x + i, y + j, colored);
-                    }
-                    if (i % 8 == 7)
-                    {
-                        ptr++;
-                    }
-                }
-                if (w % 8 != 0)
-                {
-                    ptr++;
-                }
-            }
-        }
-    }
-}
 /**
  *  @brief: this displays a string on the frame buffer but not refresh
  */

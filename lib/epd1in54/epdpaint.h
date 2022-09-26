@@ -61,7 +61,6 @@ public:
     void DrawFilledRectangle(int x0, int y0, int x1, int y1, int colored);
     void DrawCircle(int x, int y, int radius, int colored);
     void DrawFilledCircle(int x, int y, int radius, int colored);
-    void DrawHanzi(int x, int y, const char c[3], int colored);
     
 private:
     unsigned char* image;
