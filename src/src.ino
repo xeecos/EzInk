@@ -164,15 +164,15 @@ Epd epd;
 #include <Arduino.h>
 #include <cppsrc/U8g2lib.h>
 HWCDC USBSerial;
-// uint8_t *buf;
-U8G2_SSD1607_200X200_F_4W_SW_SPI u8g2(U8G2_R0,-1,-1,-1,-1,-1);
+uint8_t *buf2;
+U8G2_NULL u8g2(U8G2_R0);
 void setup()
 {
     delay(1000);
     USBSerial.begin(115200);
     delay(1000);
-    // buf = (uint8_t *)malloc(200*200);
-    // u8g2.setBufferPtr(buf);
+    buf2 = (uint8_t *)malloc(200*200);
+    u8g2.setBufferPtr(buf2);
 
     USBSerial.println("e-Paper start");
     if (epd.Init(lut_partial_update) != 0)
