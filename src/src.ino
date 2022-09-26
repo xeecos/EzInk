@@ -224,19 +224,6 @@ void setup()
     epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
     epd.DisplayFrame();
     epd.DisplayFrame();
-    delay(2000);
-    for (int i = 0, len = 5000; i < len; i++)
-    {
-        uint8_t c = buf_out[i];
-        for (int j = 0; j < 8; j++, x++)
-        {
-            bool b = (c >> (j)) & 0x1;
-            paint.DrawPixel(x, y, !b);
-        }
-    }
-    epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
-    epd.DisplayFrame();
-    epd.DisplayFrame();
 }
 void loop()
 {
