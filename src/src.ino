@@ -164,15 +164,12 @@ Epd epd;
 #include <Arduino.h>
 #include <cppsrc/U8g2lib.h>
 HWCDC USBSerial;
-uint8_t *buf2;
 U8G2_NULL u8g2(U8G2_R0);
 void setup()
 {
     delay(1000);
     USBSerial.begin(115200);
     delay(1000);
-    buf2 = (uint8_t *)malloc(200*200);
-    u8g2.setBufferPtr(buf2);
 
     USBSerial.println("e-Paper start");
     if (epd.Init(lut_partial_update) != 0)
@@ -200,7 +197,7 @@ void setup()
     u8g2.setPowerSave(0);
 
     u8g2.setFont(u8g2_font_ncenB14_tr);
-    u8g2.drawStr(20, 20, "Hello");
+    u8g2.drawStr(50, 20, "Hello");
     uint8_t *buf = u8g2.getBufferPtr();
     uint8_t buf_out[5000];
     int i = 0;
