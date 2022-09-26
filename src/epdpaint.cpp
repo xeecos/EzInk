@@ -25,6 +25,7 @@
  */
 
 #include "epdpaint.h"
+#include "ch.h"
 
 Paint::Paint(unsigned char *image, int width, int height)
 {
@@ -202,7 +203,6 @@ void Paint::DrawCharAt(int x, int y, char ascii_char, sFONT *font, int colored)
     }
 }
 
-#include "ch.h"
 void Paint::DrawHanzi(int x, int y, const char c[3], int colored)
 {
     int i, j;

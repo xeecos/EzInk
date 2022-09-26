@@ -165,23 +165,16 @@ Epd epd;
 #include <cppsrc/U8g2lib.h>
 HWCDC USBSerial;
 // uint8_t *buf;
-U8G2_SSD1607_200X200_F_4W_SW_SPI u8g2(U8G2_R0,-1,-1,-1,-1);
+U8G2_SSD1607_200X200_F_4W_SW_SPI u8g2(U8G2_R0,-1,-1,-1,-1,-1);
 void setup()
 {
     delay(1000);
-    USBSerial.begin();
+    USBSerial.begin(115200);
     delay(1000);
-    // buf = (uint8_t *)malloc(len);
+    // buf = (uint8_t *)malloc(200*200);
     // u8g2.setBufferPtr(buf);
-    u8g2.initDisplay();
-    u8g2.clearDisplay();
-    u8g2.setPowerSave(0);
 
-    u8g2.setFont(u8g2_font_ncenB14_tr);
-    u8g2.drawStr(20, 20, "Hello");
-    int len = 5000;//u8g2.getBufferSize();
-    uint8_t* buf = u8g2.getBufferPtr();
-    
+    USBSerial.println("e-Paper start");
     if (epd.Init(lut_partial_update) != 0)
     {
         USBSerial.println("e-Paper init failed");
@@ -191,50 +184,59 @@ void setup()
     {
         USBSerial.println("e-Paper init success");
     }
-    // epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
-    // epd.DisplayFrame();
-    // epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
-    // epd.DisplayFrame();
+    epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
+    epd.DisplayFrame();
+    epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
+    epd.DisplayFrame();
 
-    // paint.SetWidth(200);
-    // paint.SetHeight(200);
-    // paint.SetRotate(ROTATE_0);
-    // paint.Clear(UNCOLORED);
-    // int x=0,y=0,width=200,height=200;
-    // uint8_t buf_out[200*200];
-    // int i=0;
-    // while (y < height) {
-    //     int ym = 1 << (y % 8); // Bitmask
-    //     uint8_t* bp = &buf[width * (y >> 3)]; // Start pointer of the row
-    //     x = 0;
-    //     while (x < width) {
-    //         uint8_t d = 0;
-    //         if (bp[7] & ym) d |= 0x80;
-    //         if (bp[6] & ym) d |= 0x40;
-    //         if (bp[5] & ym) d |= 0x20;
-    //         if (bp[4] & ym) d |= 0x10;
-    //         if (bp[3] & ym) d |= 0x08;
-    //         if (bp[2] & ym) d |= 0x04;
-    //         if (bp[1] & ym) d |= 0x02;
-    //         if (bp[0] & ym) d |= 0x01;
-    //         buf_out[i++] = d;
-    //         x += 8;
-    //         bp += 8;
-    //     }
-    //     y++;
-    // }
-    // for (int i = 0, len = 200 * 200 / 8; i < len; i++)
-    // {
-    //     uint8_t c = buf_out[i];
-    //     for (int j = 0; j < 8; j++, x++)
-    //     {
-    //         bool b = (c >> (j)) & 0x1;
-    //         paint.DrawPixel(x, y, !b);
-    //     }
-    // }
-    // epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
-    // epd.DisplayFrame();
-    // epd.DisplayFrame();
+    paint.SetWidth(200);
+    paint.SetHeight(200);
+    paint.SetRotate(ROTATE_0);
+    paint.Clear(UNCOLORED);
+    int x = 0, y = 0, width = 200, height = 200;
+
+    u8g2.initDisplay();
+    u8g2.clearDisplay();
+    u8g2.setPowerSave(0);
+
+    u8g2.setFont(u8g2_font_ncenB14_tr);
+    u8g2.drawStr(20, 20, "Hello");
+    uint8_t *buf = u8g2.getBufferPtr();
+    uint8_t buf_out[5000];
+    int i = 0;
+    while (y < height)
+    {
+        int ym = 1 << (y % 8);                // Bitmask
+        uint8_t *bp = &buf[width * (y >> 3)]; // Start pointer of the row
+        x = 0;
+        while (x < width)
+        {
+            for(int k=0;k<8;k++)
+            {
+                paint.DrawPixel(x+k, y, !(bp[k]&ym));
+            }
+            x += 8;
+            bp += 8;
+        }
+        y++;
+    }
+    paint.DrawCircle(100,100,20,COLORED);
+    epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
+    epd.DisplayFrame();
+    epd.DisplayFrame();
+    delay(2000);
+    for (int i = 0, len = 5000; i < len; i++)
+    {
+        uint8_t c = buf_out[i];
+        for (int j = 0; j < 8; j++, x++)
+        {
+            bool b = (c >> (j)) & 0x1;
+            paint.DrawPixel(x, y, !b);
+        }
+    }
+    epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
+    epd.DisplayFrame();
+    epd.DisplayFrame();
 }
 void loop()
 {
