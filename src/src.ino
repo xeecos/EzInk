@@ -2,174 +2,240 @@
 #include <SPI.h>
 #include "epd1in54.h"
 #include "epdpaint.h"
-#include "imagedata.h"
-#include <driver/adc.h>
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include "AHTxx.h"
-#include "spl06.h"
-AHTxx aht20(AHTXX_ADDRESS_X38, AHT2x_SENSOR);
-const char *ssid = "makeblock.cc";
-const char *password = "hulurobot";
+// #include "imagedata.h"
+// #include <driver/adc.h>
+// #include <WiFi.h>
+// #include <HTTPClient.h>
+// #include "AHTxx.h"
+// #include "spl06.h"
+// AHTxx aht20(AHTXX_ADDRESS_X38, AHT2x_SENSOR);
+// const char *ssid = "makeblock.cc";
+// const char *password = "hulurobot";
 #define COLORED 0
 #define UNCOLORED 1
 
-//  delay(500);
-const char *host = "192.168.31.167";
+// //  delay(500);
+// const char *host = "192.168.31.167";
 unsigned char image[200 * 200];
 Paint paint(image, 0, 0); // width should be the multiple of 8
 Epd epd;
-unsigned long time_start_ms;
-unsigned long time_now_s;
+// unsigned long time_start_ms;
+// unsigned long time_now_s;
 
+// HWCDC USBSerial;
+// void setup()
+// {
+//     Wire.begin(10, 8);
+//     // put your setup code here, to run once:
+//     USBSerial.begin(115200);
+//     delay(1000);
+//     SPL_init();
+//     aht20.begin();
+//     while (1)
+//     {
+//         USBSerial.print("Measured Air Pressure: ");
+//         USBSerial.print(get_pressure(), 2);
+//         USBSerial.println(" mb");
+
+//         // ---- Altitude Values ----------------
+//         double local_pressure = 1011.3; // Look up local sea level pressure on google // Local pressure from airport website 8/22
+//         USBSerial.print("Local Airport Sea Level Pressure: ");
+//         USBSerial.print(local_pressure, 2);
+//         USBSerial.println(" mb");
+
+//         USBSerial.print("altitude: ");
+//         USBSerial.print(get_altitude(get_pressure(), local_pressure), 1);
+//         USBSerial.println(" m");
+
+//         USBSerial.print("altitude: ");
+//         USBSerial.print(get_altitude_f(get_pressure(), local_pressure), 1); // convert from meters to feet
+//         USBSerial.println(" ft");
+
+//         USBSerial.println("\n");
+//         USBSerial.print("temp: ");
+//         USBSerial.print((get_temp_c() + aht20.readTemperature()) / 2);
+//         USBSerial.print(" C, ");
+//         USBSerial.print("humidity: ");
+//         USBSerial.print(aht20.readHumidity());
+//         USBSerial.println(" %");
+//         delay(2000);
+//     }
+//     WiFi.begin(ssid, password);
+
+//     while (WiFi.status() != WL_CONNECTED)
+//     {
+//         delay(500);
+//     }
+
+//     // USBSerial.println("");
+//     // USBSerial.println("WiFi connected");
+//     // USBSerial.println("IP address: ");
+//     // USBSerial.println(WiFi.localIP());
+
+//     time_start_ms = millis();
+// }
+
+// void loop()
+// {
+//     adc1_config_width(ADC_WIDTH_BIT_12);
+//     adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_DB_11);
+//     int val = adc1_get_raw(ADC1_CHANNEL_4);
+//     // //USBSerial.printf("%d\n", val);
+//     if (val > 3000)
+//     {
+//         delay(20);
+//     }
+//     else if (val > 1000)
+//     {
+//     }
+//     else if (val > 500)
+//     {
+//         connectServer(200);
+//         delay(500);
+//     }
+//     else
+//     {
+//     }
+//     // put your main code here, to run repeatedly:
+//     // time_now_s = (millis() - time_start_ms) / 1000;
+//     // char time_string[] = {'0', '0', ':', '0', '0', '\0'};
+//     // time_string[0] = time_now_s / 60 / 10 + '0';
+//     // time_string[1] = time_now_s / 60 % 10 + '0';
+//     // time_string[3] = time_now_s % 60 / 10 + '0';
+//     // time_string[4] = time_now_s % 60 % 10 + '0';
+// }
+
+// void connectServer(int size)
+// {
+
+//     // We now create a URI for the request
+//     String url = "http://192.168.31.167:3000/";
+//     url += "?size=";
+//     url += size;
+//     url += "&font=";
+//     url += "SimSun";
+
+//     HTTPClient http;
+//     http.begin(url);
+
+//     // start get
+//     int http_code = http.GET();
+
+//     // handle http code
+//     if (http_code != HTTP_CODE_OK)
+//     {
+//         // get fail.
+//         // USBSerial.printf("GET fail, http code is %s\n", http.errorToString(http_code).c_str());
+//         return;
+//     }
+
+//     // http response
+//     String response = http.getString();
+//     // USBSerial.printf("response:[%s]\n", response.c_str());
+
+//     const uint8_t *bytes = (const uint8_t *)response.c_str();
+//     // Read all the lines of the reply from server and print them to Serial
+//     size = bytes[2];
+//     // USBSerial.printf("size:%d %d\n", bytes[2], bytes[3]);
+//     // USBSerial.println();
+//     // USBSerial.println("closing connection");
+
+//     paint.SetWidth(bytes[2]);
+//     paint.SetHeight(bytes[3]);
+//     paint.SetRotate(ROTATE_0);
+//     paint.Clear(UNCOLORED);
+//     for (int i = 4, len = size * size / 8 + 4; i < len; i++)
+//     {
+//         int idx = (i - 4) * 8;
+//         int x = idx % size;
+//         int y = (int)(idx / size);
+//         int c = bytes[i];
+//         for (int j = 0; j < 8; j++, x++)
+//         {
+//             bool b = (c >> (j)) & 0x1;
+//             paint.DrawPixel(x, y, !b);
+//         }
+//     }
+//     epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
+//     epd.DisplayFrame();
+//     epd.DisplayFrame();
+// }
+
+#include <Arduino.h>
+#include <cppsrc/U8g2lib.h>
 HWCDC USBSerial;
+// uint8_t *buf;
+U8G2_SSD1607_200X200_F_4W_SW_SPI u8g2(U8G2_R0,-1,-1,-1,-1);
 void setup()
 {
-    Wire.begin(10, 8);
-    // put your setup code here, to run once:
-    USBSerial.begin(115200);
     delay(1000);
-    SPL_init();
-    aht20.begin();
-    while (1)
-    {
-        USBSerial.print("Measured Air Pressure: ");
-        USBSerial.print(get_pressure(), 2);
-        USBSerial.println(" mb");
+    USBSerial.begin();
+    delay(1000);
+    // buf = (uint8_t *)malloc(len);
+    // u8g2.setBufferPtr(buf);
+    u8g2.initDisplay();
+    u8g2.clearDisplay();
+    u8g2.setPowerSave(0);
 
-        // ---- Altitude Values ----------------
-        double local_pressure = 1011.3; // Look up local sea level pressure on google // Local pressure from airport website 8/22
-        USBSerial.print("Local Airport Sea Level Pressure: ");
-        USBSerial.print(local_pressure, 2);
-        USBSerial.println(" mb");
-
-        USBSerial.print("altitude: ");
-        USBSerial.print(get_altitude(get_pressure(), local_pressure), 1);
-        USBSerial.println(" m");
-
-        USBSerial.print("altitude: ");
-        USBSerial.print(get_altitude_f(get_pressure(), local_pressure), 1); // convert from meters to feet
-        USBSerial.println(" ft");
-
-        USBSerial.println("\n");
-        USBSerial.print("temp: ");
-        USBSerial.print((get_temp_c() + aht20.readTemperature()) / 2);
-        USBSerial.print(" C, ");
-        USBSerial.print("humidity: ");
-        USBSerial.print(aht20.readHumidity());
-        USBSerial.println(" %");
-        delay(2000);
-    }
-    WiFi.begin(ssid, password);
-
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-    }
-
-    // USBSerial.println("");
-    // USBSerial.println("WiFi connected");
-    // USBSerial.println("IP address: ");
-    // USBSerial.println(WiFi.localIP());
+    u8g2.setFont(u8g2_font_ncenB14_tr);
+    u8g2.drawStr(20, 20, "Hello");
+    int len = 5000;//u8g2.getBufferSize();
+    uint8_t* buf = u8g2.getBufferPtr();
+    
     if (epd.Init(lut_partial_update) != 0)
     {
-        // USBSerial.println("e-Paper init failed");
+        USBSerial.println("e-Paper init failed");
         return;
     }
     else
     {
-        // USBSerial.println("e-Paper init success");
+        USBSerial.println("e-Paper init success");
     }
-    epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
-    epd.DisplayFrame();
-    epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
-    epd.DisplayFrame();
+    // epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
+    // epd.DisplayFrame();
+    // epd.ClearFrameMemory(0xFF); // bit set = white, bit reset = black
+    // epd.DisplayFrame();
 
-    time_start_ms = millis();
+    // paint.SetWidth(200);
+    // paint.SetHeight(200);
+    // paint.SetRotate(ROTATE_0);
+    // paint.Clear(UNCOLORED);
+    // int x=0,y=0,width=200,height=200;
+    // uint8_t buf_out[200*200];
+    // int i=0;
+    // while (y < height) {
+    //     int ym = 1 << (y % 8); // Bitmask
+    //     uint8_t* bp = &buf[width * (y >> 3)]; // Start pointer of the row
+    //     x = 0;
+    //     while (x < width) {
+    //         uint8_t d = 0;
+    //         if (bp[7] & ym) d |= 0x80;
+    //         if (bp[6] & ym) d |= 0x40;
+    //         if (bp[5] & ym) d |= 0x20;
+    //         if (bp[4] & ym) d |= 0x10;
+    //         if (bp[3] & ym) d |= 0x08;
+    //         if (bp[2] & ym) d |= 0x04;
+    //         if (bp[1] & ym) d |= 0x02;
+    //         if (bp[0] & ym) d |= 0x01;
+    //         buf_out[i++] = d;
+    //         x += 8;
+    //         bp += 8;
+    //     }
+    //     y++;
+    // }
+    // for (int i = 0, len = 200 * 200 / 8; i < len; i++)
+    // {
+    //     uint8_t c = buf_out[i];
+    //     for (int j = 0; j < 8; j++, x++)
+    //     {
+    //         bool b = (c >> (j)) & 0x1;
+    //         paint.DrawPixel(x, y, !b);
+    //     }
+    // }
+    // epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
+    // epd.DisplayFrame();
+    // epd.DisplayFrame();
 }
-
 void loop()
 {
-    adc1_config_width(ADC_WIDTH_BIT_12);
-    adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_DB_11);
-    int val = adc1_get_raw(ADC1_CHANNEL_4);
-    // //USBSerial.printf("%d\n", val);
-    if (val > 3000)
-    {
-        delay(20);
-    }
-    else if (val > 1000)
-    {
-    }
-    else if (val > 500)
-    {
-        connectServer(200);
-        delay(500);
-    }
-    else
-    {
-    }
-    // put your main code here, to run repeatedly:
-    // time_now_s = (millis() - time_start_ms) / 1000;
-    // char time_string[] = {'0', '0', ':', '0', '0', '\0'};
-    // time_string[0] = time_now_s / 60 / 10 + '0';
-    // time_string[1] = time_now_s / 60 % 10 + '0';
-    // time_string[3] = time_now_s % 60 / 10 + '0';
-    // time_string[4] = time_now_s % 60 % 10 + '0';
-}
-
-void connectServer(int size)
-{
-
-    // We now create a URI for the request
-    String url = "http://192.168.31.167:3000/";
-    url += "?size=";
-    url += size;
-    url += "&font=";
-    url += "SimSun";
-
-    HTTPClient http;
-    http.begin(url);
-
-    // start get
-    int http_code = http.GET();
-
-    // handle http code
-    if (http_code != HTTP_CODE_OK)
-    {
-        // get fail.
-        // USBSerial.printf("GET fail, http code is %s\n", http.errorToString(http_code).c_str());
-        return;
-    }
-
-    // http response
-    String response = http.getString();
-    // USBSerial.printf("response:[%s]\n", response.c_str());
-
-    const uint8_t *bytes = (const uint8_t *)response.c_str();
-    // Read all the lines of the reply from server and print them to Serial
-    size = bytes[2];
-    // USBSerial.printf("size:%d %d\n", bytes[2], bytes[3]);
-    // USBSerial.println();
-    // USBSerial.println("closing connection");
-
-    paint.SetWidth(bytes[2]);
-    paint.SetHeight(bytes[3]);
-    paint.SetRotate(ROTATE_0);
-    paint.Clear(UNCOLORED);
-    for (int i = 4, len = size * size / 8 + 4; i < len; i++)
-    {
-        int idx = (i - 4) * 8;
-        int x = idx % size;
-        int y = (int)(idx / size);
-        int c = bytes[i];
-        for (int j = 0; j < 8; j++, x++)
-        {
-            bool b = (c >> (j)) & 0x1;
-            paint.DrawPixel(x, y, !b);
-        }
-    }
-    epd.SetFrameMemory(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
-    epd.DisplayFrame();
-    epd.DisplayFrame();
 }
